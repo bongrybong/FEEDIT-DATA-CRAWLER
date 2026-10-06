@@ -1,0 +1,555 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/product_mapping.css' %}">
+<style>
+.pd-edit-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:10px; align-items:end; }
+.pd-edit-grid label, .pd-term-add label { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#777; }
+.pd-edit-grid input, .pd-edit-grid select, .pd-term-add input, .pd-term-add select { width:100%; box-sizing:border-box; border:1px solid #ddd; border-radius:10px; padding:10px 12px; background:#fff; }
+.pd-save-btn, .pd-term-add button { border:0; border-radius:10px; padding:11px 16px; background:#111; color:#fff; font-weight:800; cursor:pointer; }
+.pd-term-groups { display:grid; gap:14px; }
+.pd-term-group { border-top:1px solid #eee; padding-top:12px; }
+.pd-term-group:first-child { border-top:0; padding-top:0; }
+.pd-term-group h4 { margin:0 0 8px; font-size:13px; }
+.pd-term-chips { display:flex; flex-wrap:wrap; gap:7px; }
+.pd-term-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 9px; background:#f2f2ef; border-radius:999px; font-size:12px; }
+.pd-term-chip small { color:#777; }
+.pd-term-chip form { margin:0; }
+.pd-term-remove { border:0; background:transparent; cursor:pointer; font-weight:900; padding:0 2px; }
+.pd-term-add { margin-top:18px; display:grid; grid-template-columns:140px 170px minmax(220px,1fr) auto; gap:8px; align-items:end; }
+.pd-term-search-wrap { position:relative; }
+.pd-term-results { position:absolute; z-index:100; top:calc(100% + 6px); left:0; right:0; max-height:280px; overflow-y:auto; background:#fff; border:1px solid #ddd; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,.12); }
+.pd-term-result { width:100%; padding:10px 12px; border:0; border-bottom:1px solid #eee; background:#fff; text-align:left; cursor:pointer; }
+.pd-term-result:last-child { border-bottom:0; }
+.pd-term-result:hover { background:#f6f6f3; }
+.pd-term-result-name { display:block; font-size:13px; font-weight:800; }
+.pd-term-result-meta { display:block; margin-top:3px; color:#777; font-size:11px; }
+.pd-term-selected { margin-top:6px; color:#666; font-size:11px; }
+.pd-term-add button:disabled { opacity:.4; cursor:not-allowed; }
+.pd-source-readonly { margin:0 0 14px; color:#777; font-size:13px; }
+.pd-message { margin:0 0 10px; padding:10px 12px; border-radius:10px; background:rgba(233,240,86,.2); }
+@media (max-width: 900px) { .pd-edit-grid, .pd-term-add { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_normalized.html" %}
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+    {% for message in messages %}<div class="pd-message">{{ message }}</div>{% endfor %}
+{% endif %}
+<a class="pm-back" id="pmBackToProductMapping" href="{% url 'dashboard:normalized_products' %}">상품 매핑으로 돌아가기</a>
+
+<section class="pd-hero">
+    <div class="pd-image">
+        {% if product_source.display_thumbnail_url %}
+        <img
+            src="{{ product_source.display_thumbnail_url }}"
+            alt="{{ product_source.normalized_name|default:product_source.source_name }}"
+            loading="lazy"
+        >
+        {% else %}
+        <div class="pm-placeholder">NO IMAGE</div>
+        {% endif %}
+    </div>
+    <div class="pd-main">
+        <div class="pm-meta">
+            <span>{{ product_source.source.code }}</span>
+            <span>{{ product_source.market_type }}</span>
+            <span class="pm-status {% if product_source.product_id %}mapped{% else %}candidate{% endif %}">
+                {% if product_source.product_id %}MAPPED{% else %}CANDIDATE{% endif %}
+            </span>
+        </div>
+        <h2>{{ product_source.normalized_name|default:product_source.source_name }}</h2>
+        {% if product_source.source_name %}
+        <p class="pd-original">원본명 · {{ product_source.source_name }}</p>
+        {% endif %}
+
+        <dl class="pd-facts">
+            <div><dt>ProductSource ID</dt><dd>{{ product_source.id }}</dd></div>
+            <div><dt>플랫폼 상품 ID</dt><dd>{{ product_source.source_product_id }}</dd></div>
+            <div><dt>스타일 번호</dt><dd>{{ product_source.style_no|default:"-" }}</dd></div>
+            <div><dt>플랫폼 브랜드</dt><dd>{{ product_source.source_brand.name|default:"-" }}</dd></div>
+            <div><dt>FEEDIT 브랜드</dt><dd>{{ product_source.source_brand.brand.name|default:"-" }}</dd></div>
+            <div><dt>성별</dt><dd>{{ product_source.gender_scope|default:"-" }}</dd></div>
+            <div><dt>시즌</dt><dd>{{ product_source.season_year|default:"-" }} {{ product_source.season|default:"" }}</dd></div>
+            <div><dt>최근 확인</dt><dd>{{ product_source.last_seen_at|date:"Y-m-d H:i"|default:"-" }}</dd></div>
+        </dl>
+
+        {% if product_source.product %}
+        <a
+            class="pd-linked"
+            href="{% url 'dashboard:product_detail' product_source.product.id %}"
+            style="text-decoration:none; color:inherit;"
+        >
+            <span>연결된 FEEDIT Product</span>
+
+            <strong>
+                {{ product_source.product.normalized_name|default:product_source.product.canonical_name }}
+            </strong>
+
+            <small>
+                {{ product_source.product.product_code|default:"" }}
+            </small>
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+
+<section class="pd-panel">
+    <h3>ProductSource 정규화 정보 수정</h3>
+    <p class="pd-source-readonly">원본명과 플랫폼 상품 ID는 원본 데이터이므로 수정하지 않습니다.</p>
+    <form method="post" action="{% url 'dashboard:update_product_source_normalization' product_source.id %}" class="pd-edit-grid">
+        {% csrf_token %}
+        <label>정규화 상품명
+            <input type="text" name="normalized_name" value="{{ product_source.normalized_name|default:'' }}" required>
+        </label>
+        <label>스타일 번호
+            <input type="text" name="style_no" value="{{ product_source.style_no|default:'' }}">
+        </label>
+        <label>성별
+            <input type="text" name="gender_scope" value="{{ product_source.gender_scope|default:'' }}" placeholder="MEN / WOMEN / UNISEX">
+        </label>
+        <label>시즌 연도
+            <input type="number" name="season_year" value="{{ product_source.season_year|default:'' }}" min="1900" max="2200">
+        </label>
+        <label>시즌
+            <input type="text" name="season" value="{{ product_source.season|default:'' }}">
+        </label>
+        <button type="submit" class="pd-save-btn">수정 저장</button>
+    </form>
+</section>
+
+<section class="pd-panel">
+    <h3>FEEDIT Product 수동 매핑</h3>
+    {% if mapping_brand %}
+    <p class="pm-muted">{{ mapping_brand.name }} 공식 Product를 검색해서 연결합니다. 전체 상품 목록은 미리 불러오지 않습니다.</p>
+    <form method="post" action="{% url 'dashboard:manual_map_product_source' product_source.id %}" class="pm-manual-map" id="pd-product-map-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <input type="hidden" name="product_id" id="pd-map-product-id" value="{{ product_source.product_id|default:'' }}">
+        <div class="pd-term-search-wrap">
+            <input type="search" id="pd-product-search" placeholder="상품명 또는 Product ID 검색" autocomplete="off"
+                   data-search-url="{% url 'dashboard:mapping_product_search' %}" data-brand-id="{{ mapping_brand.id }}">
+            <div id="pd-product-results" class="pd-term-results" hidden></div>
+        </div>
+        <button type="submit" id="pd-product-map-submit" {% if not product_source.product_id %}disabled{% endif %}>{% if product_source.product_id %}매핑 변경{% else %}수동 매핑{% endif %}</button>
+    </form>
+    {% if product_source.product_id %}
+    <p class="pd-term-selected" id="pd-product-selected">현재 연결 · #{{ product_source.product.id }} {{ product_source.product.normalized_name|default:product_source.product.canonical_name }}</p>
+    <form method="post" action="{% url 'dashboard:unmap_product_source' product_source.id %}" class="pm-unmap-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" onclick="return confirm('현재 FEEDIT Product 매핑을 해제할까요?');">매핑 해제</button>
+    </form>
+    {% else %}
+    <p class="pd-term-selected" id="pd-product-selected" hidden></p>
+    {% endif %}
+    {% else %}
+    <p class="pm-muted">먼저 플랫폼 브랜드를 FEEDIT 브랜드에 연결해야 상품 매핑이 가능합니다.</p>
+    {% endif %}
+</section>
+
+<div class="pd-columns">
+<section class="pd-panel">
+    <h3>정규화 속성</h3>
+    {% if product_source.attributes %}
+    <pre>{{ product_source.attributes }}</pre>
+    {% else %}<p class="pm-muted">attributes 없음</p>{% endif %}
+</section>
+
+<section class="pd-panel">
+    <h3>DictionaryTerm 편집</h3>
+    <p class="pm-muted">상품에 연결된 용어를 타입별로 확인하고 직접 추가·삭제합니다.</p>
+
+    <div class="pd-term-groups">
+        {% for group in term_groups %}
+        <div class="pd-term-group">
+            <h4>{{ group.term_type }}</h4>
+            <div class="pd-term-chips">
+                {% for item in group.items %}
+                <span class="pd-term-chip">
+                    <b>{{ item.term.canonical_name }}</b>
+                    <small>{{ item.relation_type|default:"TERM" }}</small>
+                    <form method="post" action="{% url 'dashboard:remove_product_source_term' product_source.id item.id %}">
+                        {% csrf_token %}
+                        <button class="pd-term-remove" type="submit" title="Term 삭제" onclick="return confirm('이 ProductTerm 연결을 삭제할까요?');">×</button>
+                    </form>
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="pm-muted">연결된 term 없음</p>
+        {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'dashboard:add_product_source_term' product_source.id %}" class="pd-term-add" id="pd-term-add-form">
+        {% csrf_token %}
+        <label>Term Type
+            <select name="term_type" id="pd-term-type" required>
+                {% for term_type in term_type_choices %}
+                <option value="{{ term_type }}">{{ term_type }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>관계
+            <select name="relation_type" id="pd-relation-type">
+                <option value="HAS_ITEM" data-for="ITEM">아이템</option>
+                <option value="HAS_DETAIL" data-for="DETAIL">디테일</option>
+                <option value="HAS_FIT" data-for="DETAIL">핏</option>
+                <option value="HAS_SILHOUETTE" data-for="DETAIL">실루엣</option>
+                <option value="HAS_NECKLINE" data-for="DETAIL">넥라인</option>
+                <option value="HAS_SLEEVE" data-for="DETAIL">소매</option>
+                <option value="HAS_LENGTH" data-for="DETAIL">기장</option>
+                <option value="HAS_SHAPE" data-for="DETAIL">형태</option>
+                <option value="HAS_MATERIAL" data-for="MATERIAL">소재</option>
+                <option value="HAS_COLOR" data-for="COLOR">색상</option>
+                <option value="HAS_STYLE" data-for="STYLE">스타일</option>
+                <option value="HAS_TPO" data-for="TPO">TPO</option>
+            </select>
+        </label>
+        <label>사전 용어
+            <div class="pd-term-search-wrap">
+                <input
+                    type="text"
+                    name="term_name"
+                    id="pd-term-search"
+                    placeholder="예: 코튼, 다운, 스탠드칼라"
+                    autocomplete="off"
+                    required
+                >
+                <input type="hidden" name="term_id" id="pd-term-id">
+                <div id="pd-term-results" class="pd-term-results" hidden></div>
+            </div>
+            <span id="pd-term-selected" class="pd-term-selected" hidden></span>
+        </label>
+        <button type="submit" id="pd-term-submit" disabled>Term 추가</button>
+    </form>
+</section>
+</div>
+
+{% if product_source.market_type == "RESALE" %}
+<section class="pd-panel">
+    <h3>최근 리셀 데이터</h3>
+    {% if latest_resale %}
+    <dl class="pd-facts">
+        <div><dt>기준일</dt><dd>{{ latest_resale.snapshot_date|default:"-" }}</dd></div>
+        <div><dt>등록 수</dt><dd>{{ latest_resale.listing_count|default:"-"|intcomma }}</dd></div>
+        <div><dt>판매 가능</dt><dd>{{ latest_resale.available_count|default:"-"|intcomma }}</dd></div>
+        <div><dt>최저가</dt><dd>{{ latest_resale.min_price|default:"-"|intcomma }}</dd></div>
+        <div><dt>평균가</dt><dd>{{ latest_resale.avg_price|default:"-"|intcomma }}</dd></div>
+        <div><dt>최근 거래가</dt><dd>{{ latest_resale.last_trade_price|default:"-"|intcomma }}</dd></div>
+        <div><dt>거래량</dt><dd>{{ latest_resale.trade_volume|default:"-"|intcomma }}</dd></div>
+        <div><dt>리셀 지수</dt><dd>{{ latest_resale.resale_index|default:"-" }}</dd></div>
+    </dl>
+    {% else %}<p class="pm-muted">리셀 스냅샷 없음</p>{% endif %}
+</section>
+{% else %}
+<section class="pd-panel">
+    <h3>최근 판매 데이터</h3>
+    {% if latest_snapshot %}
+    <dl class="pd-facts">
+        <div><dt>기준일</dt><dd>{{ latest_snapshot.snapshot_date|default:"-" }}</dd></div>
+        <div><dt>정가</dt><dd>{{ latest_snapshot.list_price|default:"-"|intcomma }}</dd></div>
+        <div><dt>판매가</dt><dd>{{ latest_snapshot.sale_price|default:"-"|intcomma }}</dd></div>
+        <div><dt>할인율</dt><dd>{{ latest_snapshot.discount_rate|default:"-" }}</dd></div>
+        <div><dt>랭킹</dt><dd>{{ latest_snapshot.rank_position|default:"-" }}</dd></div>
+        <div><dt>평점</dt><dd>{{ latest_snapshot.rating|default:"-" }}</dd></div>
+        <div><dt>리뷰</dt><dd>{{ latest_snapshot.review_count|default:"-"|intcomma }}</dd></div>
+        <div><dt>좋아요</dt><dd>{{ latest_snapshot.like_count|default:"-"|intcomma }}</dd></div>
+    </dl>
+    {% else %}<p class="pm-muted">상품 스냅샷 없음</p>{% endif %}
+</section>
+{% endif %}
+
+<section class="pd-panel">
+    <h3>최근 리뷰</h3>
+    <div class="pd-reviews">
+        {% for review in reviews %}
+        <article>
+            <div><b>{{ review.grade|default:"-" }}</b> · {{ review.goods_option|default:"옵션 없음" }}</div>
+            <p>{{ review.content }}</p>
+        </article>
+        {% empty %}
+        <p class="pm-muted">수집된 리뷰 없음</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% if product_source.product_url %}
+<div class="pd-source-link">
+    <a href="{{ product_source.product_url }}" target="_blank" rel="noopener">원본 상품 페이지</a>
+</div>
+{% endif %}
+<script>
+(function () {
+    const input = document.getElementById('pd-product-search');
+    const results = document.getElementById('pd-product-results');
+    const productId = document.getElementById('pd-map-product-id');
+    const submit = document.getElementById('pd-product-map-submit');
+    const selected = document.getElementById('pd-product-selected');
+    if (!input || !results || !productId || !submit || !selected) return;
+
+    let timer = null;
+    let controller = null;
+
+    function closeResults() {
+        results.innerHTML = '';
+        results.hidden = true;
+    }
+
+    function choose(product) {
+        productId.value = String(product.id);
+        input.value = product.name;
+        selected.textContent = '선택됨 · #' + product.id + ' · ' + product.name;
+        selected.hidden = false;
+        submit.disabled = false;
+        closeResults();
+    }
+
+    function render(items) {
+        results.innerHTML = '';
+        if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'pd-term-result';
+            empty.textContent = '검색 결과가 없습니다.';
+            results.appendChild(empty);
+        } else {
+            items.forEach(function (product) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'pd-term-result';
+                const name = document.createElement('span');
+                name.className = 'pd-term-result-name';
+                name.textContent = product.name;
+                const meta = document.createElement('span');
+                meta.className = 'pd-term-result-meta';
+                meta.textContent = 'Product #' + product.id + (product.category ? ' · ' + product.category : '');
+                button.appendChild(name);
+                button.appendChild(meta);
+                button.addEventListener('click', function () { choose(product); });
+                results.appendChild(button);
+            });
+        }
+        results.hidden = false;
+    }
+
+    async function searchProducts() {
+        const q = input.value.trim();
+        productId.value = '';
+        submit.disabled = true;
+        if (!q) { closeResults(); return; }
+        if (controller) controller.abort();
+        controller = new AbortController();
+        const params = new URLSearchParams({brand: input.dataset.brandId, q: q, scope: 'all'});
+        try {
+            const response = await fetch(input.dataset.searchUrl + '?' + params.toString(), {
+                headers: {'X-Requested-With': 'XMLHttpRequest'}, signal: controller.signal
+            });
+            if (!response.ok) throw new Error('search failed');
+            const data = await response.json();
+            render(data.results || []);
+        } catch (error) {
+            if (error.name !== 'AbortError') closeResults();
+        }
+    }
+
+    input.addEventListener('input', function () {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(searchProducts, 220);
+    });
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('#pd-product-map-form')) closeResults();
+    });
+})();
+</script>
+
+<script>
+(function () {
+    const typeSelect = document.getElementById("pd-term-type");
+    const relationSelect = document.getElementById("pd-relation-type");
+    const searchInput = document.getElementById("pd-term-search");
+    const termIdInput = document.getElementById("pd-term-id");
+    const resultsBox = document.getElementById("pd-term-results");
+    const selectedBox = document.getElementById("pd-term-selected");
+    const submitButton = document.getElementById("pd-term-submit");
+    const form = document.getElementById("pd-term-add-form");
+    const searchUrl = "{% url 'dashboard:search_dictionary_terms' %}";
+
+    if (!typeSelect || !relationSelect || !searchInput || !termIdInput || !resultsBox || !selectedBox || !submitButton || !form) return;
+
+    let timer = null;
+    let controller = null;
+
+    function syncRelations() {
+        const type = typeSelect.value;
+        let first = null;
+
+        Array.from(relationSelect.options).forEach(function (option) {
+            const visible = option.dataset.for === type;
+            option.hidden = !visible;
+            option.disabled = !visible;
+            if (visible && first === null) first = option;
+        });
+
+        if (first) relationSelect.value = first.value;
+    }
+
+    function resetSelection() {
+        termIdInput.value = "";
+        submitButton.disabled = true;
+        selectedBox.textContent = "";
+        selectedBox.hidden = true;
+    }
+
+    function closeResults() {
+        resultsBox.innerHTML = "";
+        resultsBox.hidden = true;
+    }
+
+    function selectTerm(term) {
+        termIdInput.value = String(term.id);
+        searchInput.value = term.canonical_name;
+
+        const parts = [term.term_type, term.canonical_name];
+        if (term.english_name) parts.push(term.english_name);
+        if (term.matched_alias) parts.push("alias: " + term.matched_alias);
+
+        selectedBox.textContent = "선택됨 · " + parts.join(" · ");
+        selectedBox.hidden = false;
+        submitButton.disabled = false;
+        closeResults();
+    }
+
+    function renderResults(items) {
+        resultsBox.innerHTML = "";
+
+        if (!items.length) {
+            const empty = document.createElement("div");
+            empty.className = "pd-term-result";
+            empty.textContent = "검색 결과가 없습니다.";
+            resultsBox.appendChild(empty);
+            resultsBox.hidden = false;
+            return;
+        }
+
+        items.forEach(function (term) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "pd-term-result";
+
+            const name = document.createElement("span");
+            name.className = "pd-term-result-name";
+            name.textContent = term.canonical_name;
+
+            const meta = document.createElement("span");
+            meta.className = "pd-term-result-meta";
+
+            const metaParts = [term.term_type];
+            if (term.english_name) metaParts.push(term.english_name);
+            if (term.matched_alias) metaParts.push("alias 일치: " + term.matched_alias);
+            meta.textContent = metaParts.join(" · ");
+
+            button.appendChild(name);
+            button.appendChild(meta);
+            button.addEventListener("click", function () {
+                selectTerm(term);
+            });
+            resultsBox.appendChild(button);
+        });
+
+        resultsBox.hidden = false;
+    }
+
+    async function searchTerms() {
+        const query = searchInput.value.trim();
+        const termType = typeSelect.value;
+
+        resetSelection();
+
+        if (!query) {
+            closeResults();
+            return;
+        }
+
+        if (controller) controller.abort();
+        controller = new AbortController();
+
+        const params = new URLSearchParams({
+            type: termType,
+            q: query,
+        });
+
+        try {
+            const response = await fetch(
+                searchUrl + "?" + params.toString(),
+                {
+                    signal: controller.signal,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                }
+            );
+
+            if (!response.ok) throw new Error("Dictionary search failed");
+
+            const data = await response.json();
+            renderResults(data.results || []);
+        } catch (error) {
+            if (error.name !== "AbortError") closeResults();
+        }
+    }
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(timer);
+        resetSelection();
+        timer = setTimeout(searchTerms, 180);
+    });
+
+    typeSelect.addEventListener("change", function () {
+        syncRelations();
+        searchInput.value = "";
+        resetSelection();
+        closeResults();
+    });
+
+    form.addEventListener("submit", function (event) {
+        if (!termIdInput.value) {
+            event.preventDefault();
+            searchInput.focus();
+        }
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!event.target.closest(".pd-term-search-wrap")) {
+            closeResults();
+        }
+    });
+
+    syncRelations();
+})();
+</script>
+
+<script>
+(function () {
+    const STORAGE_KEY = "feedit.productMapping.returnUrl";
+    const backLink = document.getElementById("pmBackToProductMapping");
+
+    if (!backLink) return;
+
+    try {
+        const returnUrl = sessionStorage.getItem(STORAGE_KEY);
+        if (returnUrl && returnUrl.startsWith("/admin-dashboard/normalization/products/")) {
+            backLink.href = returnUrl;
+        }
+    } catch (error) {
+        // sessionStorage를 사용할 수 없는 환경에서는 기본 상품 매핑 URL로 이동합니다.
+    }
+})();
+</script>
+{% endblock %}

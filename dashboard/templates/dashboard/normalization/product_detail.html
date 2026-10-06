@@ -1,0 +1,1443 @@
+{% extends "dashboard/base.html" %}
+
+{% load static humanize %}
+
+
+
+{% block title %}
+
+{{ page_title }} | FEEDIT Admin
+
+{% endblock %}
+
+
+
+{% block extra_css %}
+
+<link
+
+    rel="stylesheet"
+
+    href="{% static 'dashboard/css/pages/product_mapping.css' %}"
+
+>
+
+
+
+<style>
+
+.product-detail-wrap {
+
+    display: grid;
+
+    gap: 22px;
+
+}
+
+.product-hero {
+
+    display: grid;
+
+    grid-template-columns: 180px minmax(0, 1fr);
+
+    gap: 26px;
+
+    align-items: center;
+
+}
+
+
+
+.product-hero-image {
+
+    width: 180px;
+
+    height: 210px;
+
+    overflow: hidden;
+
+    border: 1px solid #e4e4e4;
+
+    border-radius: 16px;
+
+    background: #f7f7f5;
+
+}
+
+
+
+.product-hero-image img {
+
+    width: 100%;
+
+    height: 100%;
+
+    display: block;
+
+    object-fit: contain;
+
+}
+
+
+
+.product-hero-placeholder {
+
+    width: 100%;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #aaa;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+}
+
+
+
+.product-hero-content {
+
+    min-width: 0;
+
+}
+
+
+
+.product-hero-content h1 {
+
+    margin: 0;
+
+    font-size: 32px;
+
+    line-height: 1.3;
+
+    color: #111;
+
+}
+
+
+
+.product-model {
+
+    display: inline-flex;
+
+    margin-top: 12px;
+
+    padding: 7px 10px;
+
+    border-radius: 8px;
+
+    background: #f1f1ed;
+
+    color: #111;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+}
+
+
+
+.product-detail-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+}
+
+
+
+.product-eyebrow {
+
+    margin: 0 0 8px;
+
+    color: #777;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: .08em;
+
+}
+
+
+
+.product-detail-header h1 {
+
+    margin: 0;
+
+    font-size: 30px;
+
+    line-height: 1.25;
+
+}
+
+
+
+.product-code {
+
+    margin-top: 8px;
+
+    color: #999;
+
+    font-size: 13px;
+
+}
+
+
+
+.product-panel {
+
+    padding: 24px;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 20px;
+
+    background: #fff;
+
+}
+
+
+
+.product-panel h2 {
+
+    margin: 0 0 6px;
+
+    font-size: 19px;
+
+}
+
+
+
+.product-muted {
+
+    margin: 0;
+
+    color: #888;
+
+    font-size: 13px;
+
+}
+
+
+
+.product-facts {
+
+    display: grid;
+
+    grid-template-columns:
+
+        repeat(4, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-top: 18px;
+
+}
+
+
+
+.product-fact {
+
+    padding: 14px;
+
+    border-radius: 14px;
+
+    background: #f7f7f5;
+
+}
+
+
+
+.product-fact span {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #999;
+
+    font-size: 11px;
+
+}
+
+
+
+.product-fact strong {
+
+    display: block;
+
+    word-break: break-word;
+
+    font-size: 14px;
+
+}
+
+
+
+.product-edit-grid {
+
+    display: grid;
+
+    grid-template-columns:
+
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+
+    margin-top: 20px;
+
+}
+
+
+
+.product-edit-grid label {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    color: #777;
+
+    font-size: 12px;
+
+}
+
+
+
+.product-edit-grid input,
+
+.product-edit-grid select {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 11px 13px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 11px;
+
+    background: #fff;
+
+    font: inherit;
+
+}
+
+
+
+.product-edit-grid .wide {
+
+    grid-column: 1 / -1;
+
+}
+
+
+
+.product-save {
+
+    grid-column: 1 / -1;
+
+    padding: 13px 18px;
+
+    border: 0;
+
+    border-radius: 11px;
+
+    background: #111;
+
+    color: #fff;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+}
+
+
+
+.source-list {
+
+    display: grid;
+
+    gap: 14px;
+
+    margin-top: 20px;
+
+}
+
+
+
+.source-card {
+
+    display: grid;
+
+    grid-template-columns:
+
+        110px minmax(0, 1fr);
+
+    gap: 18px;
+
+    padding: 16px;
+
+    border: 1px solid #e7e7e7;
+
+    border-radius: 16px;
+
+}
+
+
+
+.source-image {
+
+    width: 110px;
+
+    height: 130px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background: #f5f5f5;
+
+}
+
+
+
+.source-image img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+}
+
+
+
+.source-no-image {
+
+    display: flex;
+
+    width: 100%;
+
+    height: 100%;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #aaa;
+
+    font-size: 11px;
+
+}
+
+
+
+.source-top {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+
+}
+
+
+
+.source-platform {
+
+    font-size: 12px;
+
+    font-weight: 900;
+
+    text-transform: uppercase;
+
+}
+
+
+
+.source-market {
+
+    color: #777;
+
+    font-size: 11px;
+
+}
+
+
+
+.source-name {
+
+    margin: 8px 0 5px;
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+}
+
+
+
+.source-meta {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    color: #777;
+
+    font-size: 12px;
+
+}
+
+
+
+.source-terms {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 13px;
+
+}
+
+
+
+.source-term {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    background: #f2f2ef;
+
+    font-size: 11px;
+
+}
+
+
+
+.source-term-type {
+
+    color: #888;
+
+    font-size: 10px;
+
+}
+
+
+
+.source-actions {
+
+    margin-top: 13px;
+
+}
+
+
+
+.source-actions a {
+
+    display: inline-block;
+
+    padding: 8px 11px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 9px;
+
+    color: #111;
+
+    text-decoration: none;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+}
+
+
+
+.product-back {
+
+    color: #111;
+
+    text-decoration: none;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+}
+
+
+
+@media (max-width: 900px) {
+
+    .product-facts,
+
+    .product-edit-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+
+    .product-edit-grid .wide,
+
+    .product-save {
+
+        grid-column: auto;
+
+    }
+
+
+
+    .source-card {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+
+
+
+{% block sub_sidebar %}
+
+{% include "dashboard/components/sidebar_normalized.html" %}
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+
+<div class="product-detail-wrap">
+
+
+
+    <div>
+
+        <a
+
+            class="product-back"
+
+            href="{% url 'dashboard:normalized_products' %}?brand={{ product.brand_id }}&mode=REAL"
+
+        >
+
+            상품 매핑으로 돌아가기
+
+        </a>
+
+    </div>
+
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+        <div class="pd-message">
+
+            {{ message }}
+
+        </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+
+    <section class="product-panel">
+
+
+
+<div class="product-hero">
+
+
+
+    <div class="product-hero-image">
+
+        {% if product_image_url %}
+
+        <img
+
+            src="{{ product_image_url }}"
+
+            alt="{{ product.normalized_name|default:product.canonical_name }}"
+
+        >
+
+        {% else %}
+
+        <div class="product-hero-placeholder">
+
+            NO IMAGE
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <div class="product-hero-content">
+
+
+
+        <p class="product-eyebrow">
+
+            FEEDIT PRODUCT
+
+        </p>
+
+
+
+        <h1>
+
+            {{ product.normalized_name|default:product.canonical_name }}
+
+        </h1>
+
+
+
+        <div class="product-code">
+
+            {{ product.product_code|default:"FEEDIT 코드 없음" }}
+
+        </div>
+
+
+
+        {% if product.group_key %}
+
+        <div class="product-model">
+
+            MODEL · {{ product.group_key }}
+
+        </div>
+
+        {% endif %}
+
+
+
+    </div>
+
+</div>
+
+
+
+        <div class="product-facts">
+
+
+
+            <div class="product-fact">
+
+                <span>Product ID</span>
+
+                <strong>
+
+                    #{{ product.id }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>브랜드</span>
+
+                <strong>
+
+                    {{ product.brand.name|default:"-" }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>상품 그룹 / 모델</span>
+
+                <strong>
+
+                    {{ product.group_key|default:"-" }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>카테고리</span>
+
+                <strong>
+
+                    {{ product.category.name|default:"-" }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>성별</span>
+
+                <strong>
+
+                    {{ product.gender_scope|default:"-" }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>상태</span>
+
+                <strong>
+
+                    {{ product.status }}
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>연결 ProductSource</span>
+
+                <strong>
+
+                    {{ source_count|intcomma }}개
+
+                </strong>
+
+            </div>
+
+
+
+            <div class="product-fact">
+
+                <span>최근 수정</span>
+
+                <strong>
+
+                    {{ product.updated_at|date:"Y-m-d H:i" }}
+
+                </strong>
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </section>
+
+
+
+
+
+    <section class="product-panel">
+
+
+
+        <h2>FEEDIT Product 정보 수정</h2>
+
+
+
+        <p class="product-muted">
+
+            ProductSource와 별개인 FEEDIT 공식 상품 정보를 수정합니다.
+
+        </p>
+
+
+
+        <form
+
+            method="post"
+
+            action="{% url 'dashboard:update_product' product.id %}"
+
+            class="product-edit-grid"
+
+        >
+
+
+
+            {% csrf_token %}
+
+
+
+            <label class="wide">
+
+                상품명
+
+                <input
+
+                    type="text"
+
+                    name="canonical_name"
+
+                    value="{{ product.canonical_name }}"
+
+                    required
+
+                >
+
+            </label>
+
+
+
+            <label class="wide">
+
+                검색용 상품명
+
+                <input
+
+                    type="text"
+
+                    name="normalized_name"
+
+                    value="{{ product.normalized_name }}"
+
+                    required
+
+                >
+
+            </label>
+
+
+
+            <label>
+
+                영문 상품명
+
+                <input
+
+                    type="text"
+
+                    name="english_name"
+
+                    value="{{ product.english_name|default:'' }}"
+
+                >
+
+            </label>
+
+
+
+            <label>
+
+                상품 그룹 / 모델
+
+                <input
+
+                    type="text"
+
+                    name="group_key"
+
+                    value="{{ product.group_key|default:'' }}"
+
+                    placeholder="예: P-6000 / 2002R / SAMBA"
+
+                >
+
+            </label>
+
+
+
+            <label>
+
+                성별
+
+                <input
+
+                    type="text"
+
+                    name="gender_scope"
+
+                    value="{{ product.gender_scope|default:'' }}"
+
+                    placeholder="MEN / WOMEN / UNISEX"
+
+                >
+
+            </label>
+
+
+
+            <label>
+
+                표준 카테고리
+
+                <select name="category_id">
+
+                    <option value="">
+
+                        카테고리 없음
+
+                    </option>
+
+
+
+                    {% for category in categories %}
+
+                    <option
+
+                        value="{{ category.id }}"
+
+                        {% if product.category_id == category.id %}
+
+                        selected
+
+                        {% endif %}
+
+                    >
+
+                        {{ category.name }}
+
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+
+            <label>
+
+                상태
+
+                <select name="status">
+
+
+
+                    <option
+
+                        value="ACTIVE"
+
+                        {% if product.status == "ACTIVE" %}
+
+                        selected
+
+                        {% endif %}
+
+                    >
+
+                        활성
+
+                    </option>
+
+
+
+                    <option
+
+                        value="INACTIVE"
+
+                        {% if product.status == "INACTIVE" %}
+
+                        selected
+
+                        {% endif %}
+
+                    >
+
+                        비활성
+
+                    </option>
+
+
+
+                </select>
+
+            </label>
+
+
+
+            <label>
+
+                FEEDIT 상품 코드
+
+                <input
+
+                    type="text"
+
+                    value="{{ product.product_code|default:'' }}"
+
+                    disabled
+
+                >
+
+            </label>
+
+
+
+            <button
+
+                type="submit"
+
+                class="product-save"
+
+            >
+
+                Product 정보 저장
+
+            </button>
+
+
+
+        </form>
+
+
+
+    </section>
+
+
+
+
+
+    <section class="product-panel">
+
+
+
+        <h2>
+
+            매핑된 ProductSource
+
+            {{ source_count|intcomma }}
+
+        </h2>
+
+
+
+        <p class="product-muted">
+
+            이 FEEDIT Product에 연결된 플랫폼 상품과
+
+            각 상품의 DictionaryTerm을 확인합니다.
+
+        </p>
+
+
+
+        <div class="source-list">
+
+
+
+            {% for source in product_sources %}
+
+
+
+            <article class="source-card">
+
+
+
+                <div class="source-image">
+
+
+
+                    {% if source.display_thumbnail_url %}
+
+
+
+                    <img
+
+                        src="{{ source.display_thumbnail_url }}"
+
+                        alt="{{ source.normalized_name|default:source.source_name }}"
+
+                        loading="lazy"
+
+                    >
+
+
+
+                    {% else %}
+
+
+
+                    <div class="source-no-image">
+
+                        NO IMAGE
+
+                    </div>
+
+
+
+                    {% endif %}
+
+
+
+                </div>
+
+
+
+                <div>
+
+
+
+                    <div class="source-top">
+
+
+
+                        <span class="source-platform">
+
+                            {{ source.source.code }}
+
+                        </span>
+
+
+
+                        <span class="source-market">
+
+                            {{ source.market_type }}
+
+                        </span>
+
+
+
+                        <span class="source-market">
+
+                            ProductSource #{{ source.id }}
+
+                        </span>
+
+
+
+                    </div>
+
+
+
+                    <div class="source-name">
+
+                        {{ source.normalized_name|default:source.source_name }}
+
+                    </div>
+
+
+
+                    <div class="source-meta">
+
+
+
+                        <span>
+
+                            원본명:
+
+                            {{ source.source_name|default:"-" }}
+
+                        </span>
+
+
+
+                        <span>
+
+                            style_no:
+
+                            {{ source.style_no|default:"-" }}
+
+                        </span>
+
+
+
+                        <span>
+
+                            플랫폼 ID:
+
+                            {{ source.source_product_id }}
+
+                        </span>
+
+
+
+                    </div>
+
+
+
+
+
+                    <div class="source-terms">
+
+
+
+                        {% for item in source.detail_terms %}
+
+
+
+                        <span class="source-term">
+
+
+
+                            <span class="source-term-type">
+
+                                {{ item.term.term_type }}
+
+                            </span>
+
+
+
+                            <strong>
+
+                                {{ item.term.canonical_name }}
+
+                            </strong>
+
+
+
+                            <span class="source-term-type">
+
+                                {{ item.relation_type }}
+
+                            </span>
+
+
+
+                        </span>
+
+
+
+                        {% empty %}
+
+
+
+                        <span class="product-muted">
+
+                            연결된 ProductTerm 없음
+
+                        </span>
+
+
+
+                        {% endfor %}
+
+
+
+                    </div>
+
+
+
+
+
+                    <div class="source-actions">
+
+
+
+                        <a
+
+                            href="{% url 'dashboard:product_source_detail' source.id %}"
+
+                        >
+
+                            ProductSource 상세
+
+                        </a>
+
+
+
+                    </div>
+
+
+
+                </div>
+
+
+
+            </article>
+
+
+
+            {% empty %}
+
+
+
+            <p class="product-muted">
+
+                연결된 ProductSource가 없습니다.
+
+            </p>
+
+
+
+            {% endfor %}
+
+
+
+        </div>
+
+
+
+    </section>
+
+
+
+</div>
+
+
+
+{% endblock %}

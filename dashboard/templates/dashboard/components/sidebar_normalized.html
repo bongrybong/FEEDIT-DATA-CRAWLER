@@ -1,0 +1,47 @@
+{% with mode=request.GET.mode mapping=request.GET.mapping %}
+
+<aside class="sub-sidebar">
+
+    <p>PRODUCT MAPPING</p>
+
+    <a
+        href="{% url 'dashboard:normalized_products' %}"
+        {% if not mode and not mapping %}class="active"{% endif %}
+    >
+        상품 매핑 홈
+    </a>
+
+    <a
+        href="{% url 'dashboard:normalized_products' %}?mode=REAL"
+        {% if mode == "REAL" %}class="active"{% endif %}
+    >
+        진짜 브랜드
+    </a>
+
+    <a
+        href="{% url 'dashboard:normalized_products' %}?mode=MARKET"
+        {% if mode == "MARKET" %}class="active"{% endif %}
+    >
+        보세 브랜드
+    </a>
+
+
+    <p>WORKFLOW</p>
+
+    <a
+        href="{% url 'dashboard:normalized_products' %}?mapping=CANDIDATE"
+        {% if mapping == "CANDIDATE" %}class="active"{% endif %}
+    >
+        미매핑 상품
+    </a>
+
+    <a
+        href="{% url 'dashboard:normalized_products' %}?mapping=MAPPED"
+        {% if mapping == "MAPPED" %}class="active"{% endif %}
+    >
+        매핑 완료
+    </a>
+
+</aside>
+
+{% endwith %}

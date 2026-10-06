@@ -1,0 +1,307 @@
+.dashboard-heading {
+    align-items: center;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.stat-card {
+    min-height: 165px;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+}
+
+.stat-card.highlight {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.stat-label {
+    display: block;
+    color: var(--text-sub);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+}
+
+.stat-card strong {
+    display: block;
+    margin-top: 28px;
+    font-size: 34px;
+    letter-spacing: -1.5px;
+}
+
+.stat-card small {
+    display: block;
+    margin-top: 7px;
+    color: var(--text-sub);
+    font-size: 12px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 18px;
+}
+
+.pipeline {
+    display: grid;
+    gap: 5px;
+}
+
+.pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 60px;
+    padding: 10px 12px;
+    border-radius: 12px;
+}
+
+.pipeline-step:hover {
+    background: var(--surface-soft);
+}
+
+.pipeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #bbb;
+    flex: 0 0 auto;
+}
+
+.pipeline-dot--success {
+    background: #58c46c;
+}
+
+.pipeline-dot--running {
+    background: var(--accent);
+    box-shadow: 0 0 0 5px rgba(233, 240, 86, .28);
+}
+
+.pipeline-copy {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pipeline-copy span {
+    color: #4e4e49;
+    font-size: 13px;
+}
+
+.pipeline-copy strong {
+    font-size: 15px;
+}
+
+.source-list {
+    display: grid;
+    gap: 2px;
+}
+
+.source-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.source-row:last-child {
+    border-bottom: 0;
+}
+
+.recent-errors-panel {
+    margin-top: 18px;
+}
+
+@media (max-width: 1080px) {
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.summary-card {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.summary-label {
+    display: block;
+    font-size: 13px;
+    color: #777;
+}
+
+.summary-value {
+    display: block;
+    font-size: 28px;
+    margin-top: 6px;
+}
+
+.summary-caption {
+    color: #999;
+    font-size: 12px;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.filter-bar select,
+.filter-bar input {
+    padding: 9px 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+}
+
+.table-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.priority-badge {
+    margin-left: 5px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 10px;
+    background: #111;
+    color: #fff;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+}
+
+.status-warning {
+    background: #fff4d6;
+}
+
+.status-success {
+    background: #e7f7eb;
+}
+
+.review-btn {
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.brand-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, .38);
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-modal.open {
+    display: flex;
+}
+
+.brand-modal-panel {
+    position: relative;
+    width: min(680px, 90vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    background: #fff;
+    border-radius: 16px;
+}
+
+.modal-close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    border: 0;
+    background: none;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.mapping-section {
+    padding: 18px 0;
+}
+
+.mapping-section form {
+    display: grid;
+    gap: 10px;
+}
+
+.mapping-section input,
+.mapping-section select {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+}
+
+.divider {
+    text-align: center;
+    color: #aaa;
+    margin: 15px 0;
+}
+
+.primary-button,
+.secondary-button {
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.primary-button {
+    background: #111;
+    color: #fff;
+}
+
+.secondary-button {
+    background: #eee;
+}

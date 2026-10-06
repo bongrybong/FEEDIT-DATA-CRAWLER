@@ -1,0 +1,94 @@
+{% load humanize %}
+
+<a
+    href="?mode={{ selected_mode }}&brand={{ brand.id }}"
+    class="pm-brand-card"
+>
+    <div class="pm-brand-card-head">
+
+        <div class="pm-brand-identity">
+
+            <div class="pm-brand-logo">
+                {% if brand.image_url %}
+                    <img
+                        src="{{ brand.image_url }}"
+                        alt="{{ brand.name }}"
+                        loading="lazy"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+
+                    <div
+                        class="pm-brand-logo-fallback"
+                        style="display:none;"
+                    >
+                        {{ brand.name|slice:":1" }}
+                    </div>
+                {% else %}
+                    <div class="pm-brand-logo-fallback">
+                        {{ brand.name|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="pm-brand-name">
+                <strong>
+                    {{ brand.name }}
+                </strong>
+
+                {% if brand.english_name %}
+                    <span>
+                        {{ brand.english_name }}
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <span class="pm-anchor-badge">
+            {% if selected_mode == "REAL" %}
+                MUSINSA
+            {% else %}
+                ZIGZAG
+            {% endif %}
+        </span>
+
+    </div>
+
+
+    <div class="pm-brand-numbers">
+
+        <div>
+            <b>{{ brand.non_used_platform_count }}</b>
+            <span>플랫폼</span>
+        </div>
+
+        <div>
+            <b>{{ brand.observed_product_count|intcomma }}</b>
+            <span>관측 상품</span>
+        </div>
+
+        <div>
+            <b>{{ brand.unmapped_product_count|intcomma }}</b>
+            <span>미매핑</span>
+        </div>
+
+    </div>
+
+
+    <div class="pm-anchor-count">
+        {% if selected_mode == "REAL" %}
+            MUSINSA {{ brand.musinsa_product_count|intcomma }}
+        {% else %}
+            ZIGZAG {{ brand.zigzag_product_count|intcomma }}
+        {% endif %}
+    </div>
+
+
+    {% if brand.used_product_count %}
+        <div class="pm-used-note">
+            USED {{ brand.used_product_count|intcomma }}
+            · 후순위 / 추천 계산 제외
+        </div>
+    {% endif %}
+
+</a>

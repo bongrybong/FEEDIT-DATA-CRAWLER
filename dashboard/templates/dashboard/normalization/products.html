@@ -1,0 +1,1110 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}상품 매핑 관리 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/product_mapping.css' %}">
+<style>
+    .pm-brand-identity {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.pm-brand-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 1px solid rgba(127, 127, 127, 0.16);
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.pm-brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.pm-brand-logo-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f3f3ef;
+    color: #111;
+
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.pm-brand-name {
+    min-width: 0;
+}
+
+.pm-brand-name strong {
+    display: block;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.pm-brand-name span {
+    display: block;
+    margin-top: 4px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 10px;
+    opacity: 0.48;
+}
+.pm-map-box {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(127, 127, 127, 0.2);
+}
+.pm-promote-form {
+    margin-top: 7px;
+}
+
+.pm-promote-form button {
+    width: 100%;
+    border: 1px solid #111;
+    border-radius: 8px;
+    padding: 9px 12px;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.pm-promote-form button:hover {
+    opacity: 0.88;
+}
+.pm-map-form {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+.pm-map-form select {
+    min-width: 0;
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-radius: 8px;
+    background: var(--surface, #fff);
+}
+.pm-map-form button,
+.pm-unmap-form button {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+.pm-map-form button {
+    background: #E9F056;
+    color: #111;
+}
+.pm-unmap-form {
+    margin-top: 7px;
+}
+.pm-unmap-form button {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+}
+.pm-detail-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+.pm-linked-product {
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.75;
+}
+.pm-messages {
+    margin: 0 0 16px;
+}
+.pm-message {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: rgba(233, 240, 86, 0.18);
+}
+
+.pm-brand-workspace { margin-bottom: 28px; }
+.pm-mode-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+.pm-mode-tab { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 18px; border:1px solid rgba(127,127,127,.24); border-radius:12px; background:#fff; color:inherit; text-decoration:none; }
+.pm-mode-tab strong { font-size:15px; }
+.pm-mode-tab span { font-size:12px; opacity:.55; }
+.pm-mode-tab.active { border-color:#111; background:#111; color:#fff; }
+.pm-brand-search { display:flex; gap:8px; padding:14px; background:#fff; border:1px solid rgba(127,127,127,.22); border-radius:12px; }
+.pm-brand-search input { flex:1; min-width:0; padding:12px 14px; border:1px solid rgba(127,127,127,.3); border-radius:9px; font-size:14px; }
+.pm-brand-search button { border:0; border-radius:9px; padding:0 18px; background:#111; color:#fff; font-weight:700; cursor:pointer; }
+.pm-brand-section-head { margin:24px 2px 12px; }
+.pm-brand-section-head h3 { margin:4px 0 0; }
+.pm-brand-section-head p { margin:6px 0 0; font-size:13px; opacity:.58; }
+.pm-brand-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.pm-brand-card { display:block; padding:16px; border:1px solid rgba(127,127,127,.22); border-radius:12px; background:#fff; color:inherit; text-decoration:none; transition:transform .15s ease,border-color .15s ease; }
+.pm-brand-card:hover { transform:translateY(-2px); border-color:#111; }
+.pm-brand-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.pm-brand-card-head strong { display:block; font-size:16px; }
+.pm-brand-card-head > div > span { display:block; margin-top:3px; font-size:11px; opacity:.48; }
+.pm-anchor-badge { flex:0 0 auto; padding:4px 7px; border-radius:999px; background:#E9F056; color:#111; font-size:10px; font-weight:800; }
+.pm-brand-numbers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:18px; }
+.pm-brand-numbers b { display:block; font-size:17px; }
+.pm-brand-numbers span { display:block; margin-top:2px; font-size:10px; opacity:.5; }
+.pm-anchor-count { margin-top:13px; padding-top:10px; border-top:1px solid rgba(127,127,127,.15); font-size:11px; font-weight:700; }
+.pm-used-note { margin-top:5px; font-size:10px; opacity:.38; }
+.pm-selected-brand-note { margin:0 0 14px; font-size:12px; opacity:.6; }
+@media(max-width:1200px){.pm-brand-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:900px){.pm-brand-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:640px){.pm-mode-tabs,.pm-brand-grid{grid-template-columns:1fr;}}
+
+
+.pm-run-mapping { margin-top:14px; }
+.pm-run-mapping button { border:0; border-radius:10px; padding:11px 16px; background:#E9F056; color:#111; font-weight:800; cursor:pointer; }
+.pm-review { margin:18px 0 28px; padding:18px; border:1px solid rgba(127,127,127,.22); border-radius:14px; background:#fff; }
+.pm-review-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:16px; }
+.pm-review-head h3 { margin:4px 0 0; }
+.pm-review-progress { font-size:13px; font-weight:800; }
+.pm-review-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
+.pm-review-card { border:1px solid rgba(127,127,127,.22); border-radius:12px; overflow:hidden; }
+.pm-review-image { aspect-ratio:4/3; background:#f4f4f1; overflow:hidden; }
+.pm-review-image img { width:100%; height:100%; object-fit:contain; }
+.pm-review-body { padding:14px; }
+.pm-review-body h4 { margin:6px 0 8px; font-size:16px; }
+.pm-review-source-name { margin:0 0 10px; font-size:12px; opacity:.58; line-height:1.45; }
+.pm-review-terms { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+.pm-review-terms span { padding:4px 7px; border-radius:999px; background:#f2f2ee; font-size:10px; }
+.pm-review-score { margin:14px 0; padding:12px; border-radius:10px; background:#f7f7f3; font-size:12px; }
+.pm-review-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.pm-review-actions form { margin:0; }
+.pm-review-actions button, .pm-review-actions a { width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; min-height:42px; border-radius:9px; font-weight:800; text-decoration:none; cursor:pointer; }
+.pm-review-map { border:0; background:#E9F056; color:#111; }
+.pm-review-promote { border:0; background:#111; color:#fff; }
+.pm-review-skip { border:1px solid rgba(127,127,127,.35); background:#fff; color:inherit; }
+.pm-review-conflict { margin-top:8px; color:#a33; font-size:11px; }
+@media(max-width:760px){.pm-review-grid,.pm-review-actions{grid-template-columns:1fr;}}
+
+
+.pm-open-product-finder { width:100%; border:0; border-radius:8px; padding:10px 12px; background:#E9F056; color:#111; cursor:pointer; font-weight:800; }
+.pm-product-drawer-backdrop { position:fixed; inset:0; z-index:1090; background:rgba(0,0,0,.28); opacity:0; pointer-events:none; transition:opacity .18s ease; }
+.pm-product-drawer { position:fixed; z-index:1100; top:0; right:0; width:min(520px,92vw); height:100vh; background:#fff; box-shadow:-18px 0 50px rgba(0,0,0,.16); transform:translateX(102%); transition:transform .2s ease; display:flex; flex-direction:column; }
+body.pm-drawer-open .pm-product-drawer-backdrop { opacity:1; pointer-events:auto; }
+body.pm-drawer-open .pm-product-drawer { transform:translateX(0); }
+.pm-drawer-head { padding:18px; border-bottom:1px solid rgba(127,127,127,.2); }
+.pm-drawer-title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.pm-drawer-title-row h3 { margin:0; font-size:18px; }
+.pm-drawer-close { border:0; background:transparent; font-size:24px; line-height:1; cursor:pointer; }
+.pm-drawer-target { margin-top:12px; padding:11px 12px; border-radius:10px; background:#f5f5f1; }
+.pm-drawer-target b { display:block; font-size:13px; }
+.pm-drawer-target span { display:block; margin-top:4px; font-size:11px; opacity:.6; }
+.pm-product-search { width:100%; box-sizing:border-box; margin-top:12px; padding:11px 12px; border:1px solid rgba(127,127,127,.35); border-radius:9px; font-size:14px; }
+.pm-drawer-list { flex:1; overflow:auto; padding:12px; }
+.pm-finder-product { display:grid; grid-template-columns:78px minmax(0,1fr); gap:12px; padding:11px; margin-bottom:9px; border:1px solid rgba(127,127,127,.2); border-radius:11px; }
+.pm-finder-image { width:78px; height:92px; border-radius:8px; overflow:hidden; background:#f4f4f1; }
+.pm-finder-image img { width:100%; height:100%; object-fit:contain; }
+.pm-finder-body { min-width:0; }
+.pm-finder-body h4 { margin:3px 0 5px; font-size:13px; line-height:1.35; }
+.pm-finder-meta { font-size:10px; opacity:.55; }
+.pm-finder-terms { display:flex; flex-wrap:wrap; gap:4px; margin:7px 0; }
+.pm-finder-terms span { padding:3px 6px; border-radius:999px; background:#f1f1ed; font-size:9px; }
+.pm-finder-product form { margin-top:8px; }
+.pm-finder-product button { width:100%; border:0; border-radius:7px; padding:8px 10px; background:#111; color:#fff; cursor:pointer; font-weight:800; }
+.pm-finder-empty { padding:30px 10px; text-align:center; opacity:.5; }
+.pm-category-tabs { display:flex; gap:6px; margin-top:10px; overflow-x:auto; padding-bottom:2px; }
+.pm-category-tab { flex:0 0 auto; border:1px solid rgba(127,127,127,.28); border-radius:999px; padding:7px 10px; background:#fff; color:#111; cursor:pointer; font-size:11px; font-weight:800; }
+.pm-category-tab.active { border-color:#111; background:#111; color:#fff; }
+.pm-category-tab:disabled { opacity:.35; cursor:not-allowed; }
+.pm-drawer-category { margin-top:5px; font-size:10px; opacity:.55; }
+.pm-finder-category { margin:4px 0 6px; font-size:10px; font-weight:700; opacity:.58; }
+.pm-term-filter-wrap { margin-top:10px; }
+.pm-term-filter-title { margin-bottom:6px; font-size:10px; font-weight:800; opacity:.55; }
+.pm-term-filter-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.pm-term-filter-chip { border:1px solid rgba(127,127,127,.28); border-radius:999px; padding:6px 9px; background:#fff; color:#111; cursor:pointer; font-size:10px; font-weight:800; }
+.pm-term-filter-chip.active { border-color:#111; background:#111; color:#fff; }
+.pm-term-filter-empty { font-size:10px; opacity:.45; }
+.pm-finder-source-term-data { display:none; }
+
+
+.pm-open-promote-modal { width:100%; margin-top:7px; border:1px solid #111; border-radius:8px; padding:10px 12px; background:#111; color:#fff; cursor:pointer; font-weight:800; }
+.pm-open-promote-modal:hover { opacity:.88; }
+.pm-promote-backdrop { position:fixed; inset:0; z-index:1190; background:rgba(0,0,0,.42); opacity:0; pointer-events:none; transition:opacity .16s ease; }
+.pm-promote-modal { position:fixed; z-index:1200; left:50%; top:50%; width:min(520px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; transform:translate(-50%,-46%) scale(.98); opacity:0; pointer-events:none; background:#fff; border-radius:18px; box-shadow:0 24px 80px rgba(0,0,0,.24); transition:opacity .16s ease,transform .16s ease; }
+body.pm-promote-open .pm-promote-backdrop { opacity:1; pointer-events:auto; }
+body.pm-promote-open .pm-promote-modal { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+.pm-promote-modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid rgba(127,127,127,.2); }
+.pm-promote-modal-head h3 { margin:0; font-size:18px; }
+.pm-promote-modal-close { border:0; background:transparent; font-size:25px; cursor:pointer; line-height:1; }
+.pm-promote-preview { display:grid; grid-template-columns:128px minmax(0,1fr); gap:16px; padding:20px; }
+.pm-promote-preview-image { width:128px; aspect-ratio:1/1.2; border-radius:12px; overflow:hidden; background:#f2f2ee; }
+.pm-promote-preview-image img { width:100%; height:100%; object-fit:cover; display:block; }
+.pm-promote-preview-image .pm-placeholder { height:100%; }
+.pm-promote-preview-info { min-width:0; }
+.pm-promote-preview-info small { display:block; opacity:.5; margin-bottom:7px; }
+.pm-promote-preview-info strong { display:block; font-size:14px; line-height:1.45; word-break:keep-all; }
+.pm-promote-source-name { margin-top:8px; font-size:12px; line-height:1.45; opacity:.58; }
+.pm-promote-form-modal { padding:0 20px 20px; }
+.pm-promote-form-modal label { display:block; margin-bottom:7px; font-size:12px; font-weight:800; }
+.pm-promote-name-input { width:100%; box-sizing:border-box; padding:13px 14px; border:1px solid rgba(127,127,127,.35); border-radius:10px; font-size:14px; outline:none; }
+.pm-promote-name-input:focus { border-color:#111; }
+.pm-promote-help { margin:7px 0 0; font-size:11px; opacity:.5; }
+.pm-promote-actions { display:grid; grid-template-columns:1fr 2fr; gap:8px; margin-top:18px; }
+.pm-promote-actions button { border:0; border-radius:10px; padding:12px; cursor:pointer; font-weight:800; }
+.pm-promote-cancel { background:#efefeb; color:#111; }
+.pm-promote-submit { background:#111; color:#fff; }
+@media(max-width:560px){.pm-promote-preview{grid-template-columns:92px minmax(0,1fr)}.pm-promote-preview-image{width:92px}}
+
+
+.pm-collapsible {
+    margin-top: 24px;
+    border: 1px solid rgba(127,127,127,.22);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+.pm-collapsible-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 20px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 800;
+}
+.pm-collapsible-summary::-webkit-details-marker { display: none; }
+.pm-collapsible-summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: 22px;
+}
+.pm-collapsible[open] .pm-collapsible-summary::after { content: "-"; }
+.pm-collapsible-body { padding: 0 18px 18px; }
+.pm-unmapped-priority {
+    margin-top: 24px;
+    padding-top: 4px;
+}
+.pm-unmapped-count {
+    display: inline-flex;
+    margin-left: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #E9F056;
+    color: #111;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.pm-bulk-toolbar {
+    position: sticky;
+    top: 10px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(127, 127, 127, .22);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .96);
+    backdrop-filter: blur(8px);
+}
+.pm-bulk-left, .pm-bulk-right { display: flex; align-items: center; gap: 8px; }
+.pm-bulk-toolbar button {
+    border: 0;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.pm-bulk-select-all, .pm-bulk-clear { background: #f2f2ef; color: #111; }
+.pm-bulk-submit { background: #111; color: #fff; }
+.pm-bulk-submit:disabled { opacity: .35; cursor: not-allowed; }
+.pm-bulk-count { font-size: 13px; font-weight: 800; }
+.pm-selectable-card { position: relative; }
+.pm-card-check {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 8;
+    width: 24px;
+    height: 24px;
+    accent-color: #111;
+    cursor: pointer;
+    box-shadow: 0 1px 6px rgba(0,0,0,.18);
+}
+.pm-selectable-card:has(.pm-card-check:checked) {
+    outline: 3px solid #E9F056;
+    outline-offset: -3px;
+}
+@media(max-width:640px){
+    .pm-bulk-toolbar { align-items: stretch; flex-direction: column; }
+    .pm-bulk-left, .pm-bulk-right { justify-content: space-between; }
+}
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_normalized.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="pm-head">
+    <div>
+        <p class="eyebrow">FEEDIT PRODUCT MAPPING</p>
+        <h2 class="page-title">상품 매핑 관리</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if messages %}
+<div class="pm-messages">
+    {% for message in messages %}
+    <div class="pm-message">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<section class="pm-brand-workspace">
+    <div class="pm-mode-tabs">
+        <a href="?mode=REAL" class="pm-mode-tab {% if selected_mode == 'REAL' %}active{% endif %}">
+            <strong>진짜 브랜드</strong><span>MUSINSA 기준</span>
+        </a>
+        <a href="?mode=MARKET" class="pm-mode-tab {% if selected_mode == 'MARKET' %}active{% endif %}">
+            <strong>보세 브랜드</strong><span>ZIGZAG 기준</span>
+        </a>
+    </div>
+
+    <form method="get" class="pm-brand-search">
+        <input type="hidden" name="mode" value="{{ selected_mode }}">
+        <input type="text" name="brand_q" value="{{ brand_search_query }}" placeholder="브랜드명 또는 영문명 검색" autocomplete="off">
+        <button type="submit">브랜드 검색</button>
+    </form>
+
+    <div class="pm-brand-section-head">
+        <span class="pm-kicker">{% if brand_search_query %}SEARCH RESULT{% else %}RECOMMENDED{% endif %}</span>
+        <h3>{% if brand_search_query %}"{{ brand_search_query }}" 검색 결과{% elif selected_mode == 'REAL' %}우선 작업할 진짜 브랜드{% else %}우선 작업할 보세 브랜드{% endif %}</h3>
+        {% if not brand_search_query %}<p>여러 소스에서 관측되고 상품 수가 많은 브랜드를 우선 추천합니다. Musinsa Used는 추천 계산에서 제외합니다.</p>{% endif %}
+    </div>
+
+    <div class="pm-brand-grid">
+        {% if brand_search_query %}
+            {% for brand in brand_search_results %}
+                {% include "dashboard/normalization/_brand_mapping_card.html" with brand=brand %}
+            {% empty %}<div class="pm-empty">검색 결과가 없습니다.</div>{% endfor %}
+        {% else %}
+            {% for brand in recommended_brands %}
+                {% include "dashboard/normalization/_brand_mapping_card.html" with brand=brand %}
+            {% empty %}<div class="pm-empty">추천할 브랜드가 없습니다.</div>{% endfor %}
+        {% endif %}
+    </div>
+</section>
+
+{% if selected_brand %}
+<form method="get" class="pm-filter">
+    <input type="hidden" name="mode" value="{{ selected_mode }}">
+    <input type="hidden" name="brand" value="{{ selected_brand.id }}">
+
+    <select name="market">
+        <option value="">RETAIL + RESALE</option>
+        <option value="RETAIL" {% if selected_market == "RETAIL" %}selected{% endif %}>RETAIL</option>
+        <option value="RESALE" {% if selected_market == "RESALE" %}selected{% endif %}>RESALE</option>
+    </select>
+    <select name="source">
+        <option value="">전체 플랫폼</option>
+        {% for source in source_options %}<option value="{{ source.code }}" {% if selected_source|lower == source.code|lower %}selected{% endif %}>{{ source.name|default:source.code }}</option>{% endfor %}
+    </select>
+    <select name="mapping">
+        <option value="">매핑 + 후보</option>
+        <option value="MAPPED" {% if selected_mapping == "MAPPED" %}selected{% endif %}>매핑 완료</option>
+        <option value="CANDIDATE" {% if selected_mapping == "CANDIDATE" %}selected{% endif %}>후보</option>
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="normalized_name / 원본명 / 상품 ID / 스타일번호">
+    <button type="submit">조회</button>
+    <a href="{% url 'dashboard:normalized_products' %}?mode={{ selected_mode }}&brand={{ selected_brand.id }}">필터 초기화</a>
+</form>
+{% endif %}
+
+{% if selected_brand %}
+<section class="pm-brand">
+    <div>
+        <span class="pm-kicker">FEEDIT BRAND</span>
+        <h3>{{ selected_brand.name }}</h3>
+        {% if selected_brand.english_name %}
+        <p>{{ selected_brand.english_name }}</p>
+        {% endif %}
+    </div>
+
+    <div class="pm-stats">
+        <div><b>{{ summary.official|intcomma }}</b><span>공식 Product</span></div>
+        <div><b>{{ summary.source_total|intcomma }}</b><span>플랫폼 상품</span></div>
+        <div><b>{{ summary.mapped|intcomma }}</b><span>매핑 완료</span></div>
+        <div><b>{{ summary.candidates|intcomma }}</b><span>후보</span></div>
+    </div>
+</section>
+
+{% if review_workspace %}
+<section class="pm-review">
+    <div class="pm-review-head">
+        <div>
+            <span class="pm-kicker">MAPPING REVIEW</span>
+            <h3>후보 상품 검토</h3>
+            <p class="pm-muted">{{ review_workspace.anchor_code|upper }} 기반 FEEDIT Product와 비교합니다.</p>
+        </div>
+        <div class="pm-review-progress">{{ review_workspace.current_index }} / {{ review_workspace.total }}</div>
+    </div>
+
+    {% if review_workspace.candidate %}
+    {% with c=review_workspace.candidate %}
+    <div class="pm-review-grid">
+        <article class="pm-review-card">
+            <div class="pm-review-image">
+                {% if c.target.display_thumbnail_url %}<img src="{{ c.target.display_thumbnail_url }}" alt="{{ c.target.normalized_name }}">{% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}
+            </div>
+            <div class="pm-review-body">
+                <div class="pm-meta"><span>{{ c.target.source.code }}</span><span>PS #{{ c.target.id }}</span></div>
+                <h4>{{ c.target.normalized_name }}</h4>
+                <p class="pm-review-source-name">{{ c.target.source_name }}</p>
+                <div class="pm-review-terms">
+                    {% for term_type, names in c.target_terms.items %}
+                        {% for name in names %}<span>{{ term_type }} · {{ name }}</span>{% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+
+        <article class="pm-review-card">
+            <div class="pm-review-image">
+                {% if c.anchor.display_thumbnail_url %}<img src="{{ c.anchor.display_thumbnail_url }}" alt="{{ c.anchor.normalized_name }}">{% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}
+            </div>
+            <div class="pm-review-body">
+                <div class="pm-meta"><span>{{ c.anchor.source.code }}</span><span>PRODUCT #{{ c.product.id }}</span></div>
+                <h4>{{ c.anchor.normalized_name }}</h4>
+                <p class="pm-review-source-name">{{ c.anchor.source_name }}</p>
+                <div class="pm-review-terms">
+                    {% for term_type, names in c.anchor_terms.items %}
+                        {% for name in names %}<span>{{ term_type }} · {{ name }}</span>{% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="pm-review-score">
+        이름 유사도 {{ c.name_score|floatformat:4 }}
+        {% if c.term_conflicts %}<div class="pm-review-conflict">TERM 충돌 있음</div>{% endif %}
+        {% if c.structural_conflicts %}<div class="pm-review-conflict">구조 충돌 있음</div>{% endif %}
+    </div>
+
+    <div class="pm-review-actions">
+        <form method="post" action="{% url 'dashboard:manual_map_product_source' c.target.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" value="{{ c.product.id }}">
+            <input type="hidden" name="next" value="{% url 'dashboard:normalized_products' %}?mode={{ selected_mode }}&brand={{ selected_brand.id }}&review=1&step={{ review_workspace.next_step }}&review_total={{ review_workspace.total }}">
+            <button type="submit" class="pm-review-map">매핑</button>
+        </form>
+        <form method="post" action="{% url 'dashboard:promote_product_source' c.target.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'dashboard:normalized_products' %}?mode={{ selected_mode }}&brand={{ selected_brand.id }}&review=1&step={{ review_workspace.next_step }}&review_total={{ review_workspace.total }}">
+            <button type="submit" class="pm-review-promote" onclick="return confirm('이 상품을 신규 FEEDIT Product로 승격할까요?');">상품 승격</button>
+        </form>
+        <a class="pm-review-skip" href="?mode={{ selected_mode }}&brand={{ selected_brand.id }}&review=1&skip={{ review_workspace.next_skip }}&step={{ review_workspace.next_step }}&review_total={{ review_workspace.total }}">스킵</a>
+    </div>
+    {% endwith %}
+    {% else %}
+    <div class="pm-empty">현재 검토할 후보가 없습니다.</div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if unmapped_rows %}
+<section class="pm-section pm-unmapped-priority">
+    <div class="pm-section-head">
+        <div>
+            <span class="pm-kicker">UNMAPPED</span>
+            <h3>미매핑 상품 <span class="pm-unmapped-count">USED 제외</span></h3>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'dashboard:bulk_promote_product_sources' %}" id="pmBulkPromoteForm">
+        {% csrf_token %}
+        <input type="hidden" name="brand_id" value="{{ selected_brand.id }}">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        <div class="pm-bulk-toolbar">
+            <div class="pm-bulk-left">
+                <button type="button" class="pm-bulk-select-all" id="pmBulkSelectAll">전체 선택</button>
+                <button type="button" class="pm-bulk-clear" id="pmBulkClear">선택 해제</button>
+                <span class="pm-bulk-count">선택 <b id="pmBulkSelectedCount">0</b>개</span>
+            </div>
+            <div class="pm-bulk-right">
+                <button type="submit" class="pm-bulk-submit" id="pmBulkSubmit" disabled>선택 상품 일괄 승격</button>
+            </div>
+        </div>
+
+        <div class="pm-grid">
+        {% for row in unmapped_rows %}
+            <article class="pm-card pm-selectable-card">
+                <input class="pm-card-check" type="checkbox" name="product_source_ids" value="{{ row.id }}" aria-label="ProductSource #{{ row.id }} 선택">
+                <a class="pm-detail-link" href="{% url 'dashboard:product_source_detail' row.id %}?next={{ request.get_full_path|urlencode }}">
+                    <div class="pm-image">
+                        {% if row.display_thumbnail_url %}
+                        <img src="{{ row.display_thumbnail_url }}" alt="{{ row.normalized_name|default:row.source_name }}" loading="lazy">
+                        {% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}
+                    </div>
+                    <div class="pm-card-body">
+                        <div class="pm-meta"><span>{{ row.source.code }}</span><span class="pm-status candidate">CANDIDATE</span></div>
+                        <h4>{{ row.normalized_name|default:row.source_name|default:"이름 없음" }}</h4>
+                        {% if row.source_name and row.source_name != row.normalized_name %}<p title="{{ row.source_name }}">{{ row.source_name }}</p>{% endif %}
+                        <small>{{ row.source_product_id }}{% if row.style_no %} · {{ row.style_no }}{% endif %}</small>
+                    </div>
+                </a>
+                <div class="pm-card-body pm-map-box">
+                    <button type="button" class="pm-open-product-finder"
+                        data-source-id="{{ row.id }}"
+                        data-source-name="{{ row.normalized_name|default:row.source_name|escape }}"
+                        data-category-id="{{ row.mapping_category_id|default:'' }}"
+                        data-category-name="{{ row.mapping_category_name|default:''|escape }}"
+                        data-root-category-id="{{ row.mapping_root_category_id|default:'' }}"
+                        data-root-category-name="{{ row.mapping_root_category_name|default:''|escape }}">FEEDIT Product에 매핑</button>
+                    <div class="pm-finder-source-term-data">
+                        {% for item in row.finder_terms %}
+                        <span data-term-id="{{ item.term_id }}" data-term-type="{{ item.term.term_type|escape }}" data-term-name="{{ item.term.canonical_name|escape }}"></span>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="pm-open-promote-modal"
+                        data-promote-url="{% url 'dashboard:promote_product_source' row.id %}"
+                        data-source-id="{{ row.id }}"
+                        data-product-name="{{ row.normalized_name|default:row.source_name|escape }}"
+                        data-source-name="{{ row.source_name|default:''|escape }}"
+                        data-image-url="{{ row.display_thumbnail_url|default:''|escape }}">신규 상품으로 승격</button>
+                </div>
+            </article>
+        {% endfor %}
+        </div>
+    </form>
+</section>
+{% endif %}
+
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<nav class="pm-pagination" aria-label="플랫폼 상품 페이지">
+    {% if page_obj.has_previous %}
+    <a href="?mode={{ selected_mode }}&brand={{ selected_brand.id }}&market={{ selected_market }}&mapping={{ selected_mapping }}&source={{ selected_source }}&q={{ search_query|urlencode }}&skip_top={{ skip_top }}&page={{ page_obj.previous_page_number }}">이전</a>
+    {% endif %}
+
+    <span class="pm-pagination-current">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 페이지 · 총 {{ filtered_count }}개
+    </span>
+
+    {% if page_obj.has_next %}
+    <a href="?mode={{ selected_mode }}&brand={{ selected_brand.id }}&market={{ selected_market }}&mapping={{ selected_mapping }}&source={{ selected_source }}&q={{ search_query|urlencode }}&skip_top={{ skip_top }}&page={{ page_obj.next_page_number }}">다음</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% if official_products %}
+<details class="pm-collapsible">
+    <summary class="pm-collapsible-summary">공식 상품 <span>{{ official_products|length }}개</span></summary>
+    <div class="pm-collapsible-body">
+        <div class="pm-grid pm-official-grid">
+        {% for product in official_products %}
+        <article class="pm-card pm-official">
+            <a class="pm-detail-link" href="{% url 'dashboard:product_detail' product.id %}?mode={{ selected_mode }}">
+                <div class="pm-image">
+                    {% if product.display_thumbnail_url %}<img src="{{ product.display_thumbnail_url }}" alt="{{ product.normalized_name|default:product.canonical_name }}" loading="lazy">
+                    {% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}
+                </div>
+                <div class="pm-card-body">
+                    <span class="pm-badge">PRODUCT #{{ product.id }}</span>
+                    <h4>{{ product.normalized_name|default:product.canonical_name }}</h4>
+                    {% if product.canonical_name and product.canonical_name != product.normalized_name %}<p>{{ product.canonical_name }}</p>{% endif %}
+                    {% if product.product_code %}<small>{{ product.product_code }}</small>{% endif %}
+                    {% if product.group_key %}<div class="pm-linked-product">MODEL · {{ product.group_key }}</div>{% endif %}
+                </div>
+            </a>
+        </article>
+        {% endfor %}
+        </div>
+    </div>
+</details>
+{% endif %}
+
+<details class="pm-collapsible">
+    <summary class="pm-collapsible-summary">매핑 완료 상품</summary>
+    <div class="pm-collapsible-body">
+    {% for market_name, groups in grouped.items %}
+        {% for group in groups %}
+            {% if group.mapped %}
+            <div class="pm-platform">
+                <div class="pm-platform-head"><h4>{{ group.source_name }}</h4><span>{{ group.mapped|length }} mapped</span></div>
+                <div class="pm-grid">
+                {% for row in group.mapped %}
+                <article class="pm-card">
+                    <a class="pm-detail-link" href="{% url 'dashboard:product_source_detail' row.id %}?next={{ request.get_full_path|urlencode }}">
+                        <div class="pm-image">{% if row.display_thumbnail_url %}<img src="{{ row.display_thumbnail_url }}" alt="{{ row.normalized_name|default:row.source_name }}" loading="lazy">{% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}</div>
+                        <div class="pm-card-body">
+                            <div class="pm-meta"><span>{{ row.source.code }}</span><span class="pm-status mapped">MAPPED</span></div>
+                            <h4>{{ row.normalized_name|default:row.source_name|default:"이름 없음" }}</h4>
+                            {% if row.source_name and row.source_name != row.normalized_name %}<p title="{{ row.source_name }}">{{ row.source_name }}</p>{% endif %}
+                            <small>{{ row.source_product_id }}{% if row.style_no %} · {{ row.style_no }}{% endif %}</small>
+                            {% if row.product %}<div class="pm-linked-product">연결 Product #{{ row.product.id }} · {{ row.product.normalized_name|default:row.product.canonical_name }}</div>{% endif %}
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    </div>
+</details>
+
+<details class="pm-collapsible">
+    <summary class="pm-collapsible-summary">Musinsa Used / Resale</summary>
+    <div class="pm-collapsible-body">
+    {% for market_name, groups in grouped.items %}
+        {% for group in groups %}
+            {% if group.source_code|lower == "musinsa_used" or group.source_code|lower == "musinsa-used" %}
+            <div class="pm-platform">
+                <div class="pm-platform-head"><h4>{{ group.source_name }}</h4><span>{{ group.candidates|length }} candidate</span></div>
+                {% if group.candidates %}
+                <div class="pm-grid">
+                {% for row in group.candidates %}
+                <article class="pm-card">
+                    <a class="pm-detail-link" href="{% url 'dashboard:product_source_detail' row.id %}?next={{ request.get_full_path|urlencode }}">
+                        <div class="pm-image">{% if row.display_thumbnail_url %}<img src="{{ row.display_thumbnail_url }}" alt="{{ row.normalized_name|default:row.source_name }}" loading="lazy">{% else %}<div class="pm-placeholder">NO IMAGE</div>{% endif %}</div>
+                        <div class="pm-card-body"><div class="pm-meta"><span>{{ row.source.code }}</span><span class="pm-status candidate">CANDIDATE</span></div><h4>{{ row.normalized_name|default:row.source_name|default:"이름 없음" }}</h4></div>
+                    </a>
+                </article>
+                {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    </div>
+</details>
+
+
+
+{% else %}
+<div class="pm-empty">
+    FEEDIT 브랜드를 선택하면 공식 Product와 플랫폼 상품을 확인할 수 있습니다.
+</div>
+{% endif %}
+
+{% if selected_brand %}
+<div class="pm-promote-backdrop" id="pmPromoteBackdrop"></div>
+<div class="pm-promote-modal" id="pmPromoteModal" aria-hidden="true">
+    <div class="pm-promote-modal-head">
+        <h3>신규 FEEDIT Product로 승격</h3>
+        <button type="button" class="pm-promote-modal-close" id="pmPromoteClose" aria-label="닫기">×</button>
+    </div>
+    <div class="pm-promote-preview">
+        <div class="pm-promote-preview-image">
+            <img id="pmPromoteImage" src="" alt="선택 상품" style="display:none;">
+            <div class="pm-placeholder" id="pmPromoteNoImage">NO IMAGE</div>
+        </div>
+        <div class="pm-promote-preview-info">
+            <small id="pmPromoteSourceId"></small>
+            <strong id="pmPromoteNormalizedName"></strong>
+            <div class="pm-promote-source-name" id="pmPromoteSourceName"></div>
+        </div>
+    </div>
+    <form method="post" id="pmPromoteForm" class="pm-promote-form-modal">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <label for="pmPromoteName">FEEDIT 상품명</label>
+        <input id="pmPromoteName" class="pm-promote-name-input" type="text" name="product_name" required autocomplete="off">
+        <p class="pm-promote-help">색상별 상품이면 블랙, 실버, 라이트 그레이처럼 구분명을 직접 추가할 수 있습니다.</p>
+        <div class="pm-promote-actions">
+            <button type="button" class="pm-promote-cancel" id="pmPromoteCancel">취소</button>
+            <button type="submit" class="pm-promote-submit">이 이름으로 상품 승격</button>
+        </div>
+    </form>
+</div>
+
+<div class="pm-product-drawer-backdrop" id="pmProductDrawerBackdrop"></div>
+<aside class="pm-product-drawer" id="pmProductDrawer" aria-hidden="true">
+    <div class="pm-drawer-head">
+        <div class="pm-drawer-title-row">
+            <div>
+                <span class="pm-kicker">FEEDIT PRODUCT FINDER</span>
+                <h3>{{ selected_brand.name }} 상품 선택</h3>
+            </div>
+            <button type="button" class="pm-drawer-close" id="pmProductDrawerClose" aria-label="닫기">×</button>
+        </div>
+        <div class="pm-drawer-target">
+            <b id="pmDrawerTargetName">미매핑 상품</b>
+            <span id="pmDrawerTargetId"></span>
+            <div class="pm-drawer-category" id="pmDrawerTargetCategory"></div>
+        </div>
+        <div class="pm-category-tabs" id="pmCategoryTabs">
+            <button type="button" class="pm-category-tab active" data-scope="exact" id="pmCategoryExact">같은 카테고리</button>
+            <button type="button" class="pm-category-tab" data-scope="root" id="pmCategoryRoot">같은 대분류</button>
+            <button type="button" class="pm-category-tab" data-scope="all">브랜드 전체</button>
+        </div>
+        <div class="pm-term-filter-wrap" id="pmTermFilterWrap">
+            <div class="pm-term-filter-title">현재 ProductSource의 상품 특성</div>
+            <div class="pm-term-filter-chips" id="pmTermFilterChips"></div>
+        </div>
+        <input type="search" id="pmProductSearch" class="pm-product-search" placeholder="현재 범위에서 상품명 / Product ID / 원본명 검색" autocomplete="off">
+    </div>
+    <div class="pm-drawer-list" id="pmProductList"
+         data-search-url="{% url 'dashboard:mapping_product_search' %}"
+         data-brand-id="{{ selected_brand.id }}">
+        <div class="pm-finder-empty" id="pmFinderHint">검색어를 입력하거나 범위를 선택하면 최대 30개의 FEEDIT Product를 조회합니다.</div>
+        <div class="pm-finder-empty" id="pmFinderLoading" style="display:none;">검색 중...</div>
+        <div class="pm-finder-empty" id="pmFinderNoResult" style="display:none;">검색 결과가 없습니다.</div>
+    </div>
+</aside>
+
+<script>
+
+(function () {
+    const form = document.getElementById('pmBulkPromoteForm');
+    if (!form) return;
+
+    const checks = Array.from(form.querySelectorAll('.pm-card-check'));
+    const count = document.getElementById('pmBulkSelectedCount');
+    const submit = document.getElementById('pmBulkSubmit');
+    const selectAll = document.getElementById('pmBulkSelectAll');
+    const clear = document.getElementById('pmBulkClear');
+
+    function refreshBulkSelection() {
+        const selected = checks.filter((checkbox) => checkbox.checked).length;
+        count.textContent = String(selected);
+        submit.disabled = selected === 0;
+    }
+
+    checks.forEach((checkbox) => {
+        checkbox.addEventListener('change', refreshBulkSelection);
+        checkbox.addEventListener('click', (event) => event.stopPropagation());
+    });
+
+    selectAll.addEventListener('click', () => {
+        checks.forEach((checkbox) => { checkbox.checked = true; });
+        refreshBulkSelection();
+    });
+
+    clear.addEventListener('click', () => {
+        checks.forEach((checkbox) => { checkbox.checked = false; });
+        refreshBulkSelection();
+    });
+
+    form.addEventListener('submit', (event) => {
+        const selected = checks.filter((checkbox) => checkbox.checked).length;
+        if (!selected) {
+            event.preventDefault();
+            return;
+        }
+
+        const ok = window.confirm(
+            `선택한 ${selected}개 상품을 각각 신규 FEEDIT Product로 승격할까요?`
+        );
+        if (!ok) event.preventDefault();
+    });
+
+    refreshBulkSelection();
+})();
+
+
+(function () {
+    const drawer = document.getElementById('pmProductDrawer');
+    const backdrop = document.getElementById('pmProductDrawerBackdrop');
+    const closeButton = document.getElementById('pmProductDrawerClose');
+    const search = document.getElementById('pmProductSearch');
+    const targetName = document.getElementById('pmDrawerTargetName');
+    const targetId = document.getElementById('pmDrawerTargetId');
+    const targetCategory = document.getElementById('pmDrawerTargetCategory');
+    const list = document.getElementById('pmProductList');
+    const hint = document.getElementById('pmFinderHint');
+    const loading = document.getElementById('pmFinderLoading');
+    const noResult = document.getElementById('pmFinderNoResult');
+    const categoryTabs = Array.from(document.querySelectorAll('.pm-category-tab'));
+    const exactTab = document.getElementById('pmCategoryExact');
+    const rootTab = document.getElementById('pmCategoryRoot');
+    const termFilterWrap = document.getElementById('pmTermFilterWrap');
+    const termFilterChips = document.getElementById('pmTermFilterChips');
+
+    let sourceId = null;
+    let sourceCategoryId = '';
+    let sourceRootCategoryId = '';
+    let categoryScope = 'exact';
+    let selectedTermIds = new Set();
+    let timer = null;
+    let controller = null;
+
+    const promoteModal = document.getElementById('pmPromoteModal');
+    const promoteBackdrop = document.getElementById('pmPromoteBackdrop');
+    const promoteClose = document.getElementById('pmPromoteClose');
+    const promoteCancel = document.getElementById('pmPromoteCancel');
+    const promoteForm = document.getElementById('pmPromoteForm');
+    const promoteName = document.getElementById('pmPromoteName');
+    const promoteImage = document.getElementById('pmPromoteImage');
+    const promoteNoImage = document.getElementById('pmPromoteNoImage');
+    const promoteSourceId = document.getElementById('pmPromoteSourceId');
+    const promoteNormalizedName = document.getElementById('pmPromoteNormalizedName');
+    const promoteSourceName = document.getElementById('pmPromoteSourceName');
+
+    function closePromoteModal() {
+        document.body.classList.remove('pm-promote-open');
+        promoteModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openPromoteModal(button) {
+        const name = button.dataset.productName || '';
+        const sourceName = button.dataset.sourceName || '';
+        const imageUrl = button.dataset.imageUrl || '';
+        promoteForm.action = button.dataset.promoteUrl;
+        promoteName.value = name;
+        promoteSourceId.textContent = 'ProductSource #' + button.dataset.sourceId;
+        promoteNormalizedName.textContent = name || sourceName || '이름 없음';
+        promoteSourceName.textContent = sourceName && sourceName !== name ? '원본명 · ' + sourceName : '';
+        if (imageUrl) {
+            promoteImage.src = imageUrl;
+            promoteImage.style.display = 'block';
+            promoteNoImage.style.display = 'none';
+        } else {
+            promoteImage.removeAttribute('src');
+            promoteImage.style.display = 'none';
+            promoteNoImage.style.display = 'flex';
+        }
+        document.body.classList.add('pm-promote-open');
+        promoteModal.setAttribute('aria-hidden', 'false');
+        setTimeout(function () { promoteName.focus(); promoteName.select(); }, 50);
+    }
+
+    document.querySelectorAll('.pm-open-promote-modal').forEach(function (button) {
+        button.addEventListener('click', function () { openPromoteModal(button); });
+    });
+    if (promoteClose) promoteClose.addEventListener('click', closePromoteModal);
+    if (promoteCancel) promoteCancel.addEventListener('click', closePromoteModal);
+    if (promoteBackdrop) promoteBackdrop.addEventListener('click', closePromoteModal);
+
+    function closeDrawer() {
+        if (controller) controller.abort();
+        document.body.classList.remove('pm-drawer-open');
+        drawer.setAttribute('aria-hidden', 'true');
+    }
+
+    function renderSourceTermFilters(button) {
+        selectedTermIds = new Set();
+        termFilterChips.innerHTML = '';
+
+        const card = button.closest('.pm-selectable-card');
+        const nodes = card ? Array.from(card.querySelectorAll('.pm-finder-source-term-data span')) : [];
+
+        if (!nodes.length) {
+            termFilterWrap.style.display = 'none';
+            return;
+        }
+
+        termFilterWrap.style.display = '';
+
+        nodes.forEach(function (node) {
+            const termId = node.dataset.termId || '';
+            if (!termId) return;
+
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'pm-term-filter-chip';
+            chip.dataset.termId = termId;
+            chip.textContent = (node.dataset.termType || 'TERM') + ' · ' + (node.dataset.termName || '');
+            chip.setAttribute('aria-pressed', 'false');
+
+            chip.addEventListener('click', function () {
+                if (selectedTermIds.has(termId)) {
+                    selectedTermIds.delete(termId);
+                    chip.classList.remove('active');
+                    chip.setAttribute('aria-pressed', 'false');
+                } else {
+                    selectedTermIds.add(termId);
+                    chip.classList.add('active');
+                    chip.setAttribute('aria-pressed', 'true');
+                }
+                scheduleSearch(0);
+            });
+
+            termFilterChips.appendChild(chip);
+        });
+    }
+
+    function setCategoryScope(scope) {
+        categoryScope = scope;
+        categoryTabs.forEach(function (tab) {
+            tab.classList.toggle('active', tab.dataset.scope === scope);
+        });
+        scheduleSearch(0);
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML;
+    }
+
+    function renderProducts(items) {
+        list.querySelectorAll('.pm-finder-product').forEach(function (node) { node.remove(); });
+        hint.style.display = 'none';
+        loading.style.display = 'none';
+        noResult.style.display = items.length ? 'none' : '';
+
+        items.forEach(function (product) {
+            const article = document.createElement('article');
+            article.className = 'pm-finder-product';
+            const image = product.thumbnail_url
+                ? '<img src="' + escapeHtml(product.thumbnail_url) + '" alt="' + escapeHtml(product.name) + '" loading="lazy">'
+                : '<div class="pm-placeholder">NO IMAGE</div>';
+            const category = product.category
+                ? '<div class="pm-finder-category">' + escapeHtml(product.category) + '</div>'
+                : '';
+            article.innerHTML =
+                '<div class="pm-finder-image">' + image + '</div>' +
+                '<div class="pm-finder-body">' +
+                    '<div class="pm-finder-meta">PRODUCT #' + product.id + '</div>' +
+                    '<h4>' + escapeHtml(product.name) + '</h4>' + category +
+                    '<form method="post" class="pm-finder-map-form" action="/admin-dashboard/normalization/products/source/' + sourceId + '/map/">' +
+                        '<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">' +
+                        '<input type="hidden" name="product_id" value="' + product.id + '">' +
+                        '<input type="hidden" name="next" value="' + escapeHtml(window.location.pathname + window.location.search) + '">' +
+                        '<button type="submit">이 상품에 매핑</button>' +
+                    '</form>' +
+                '</div>';
+            list.appendChild(article);
+        });
+    }
+
+    async function runSearch() {
+        if (!sourceId) return;
+        if (controller) controller.abort();
+        controller = new AbortController();
+
+        const params = new URLSearchParams();
+        params.set('brand', list.dataset.brandId || '');
+        params.set('q', search.value.trim());
+        params.set('scope', categoryScope);
+        if (sourceCategoryId) params.set('category_id', sourceCategoryId);
+        if (sourceRootCategoryId) params.set('root_category_id', sourceRootCategoryId);
+        selectedTermIds.forEach(function (termId) { params.append('term', termId); });
+
+        hint.style.display = 'none';
+        noResult.style.display = 'none';
+        loading.style.display = '';
+
+        try {
+            const response = await fetch(list.dataset.searchUrl + '?' + params.toString(), {
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                signal: controller.signal
+            });
+            if (!response.ok) throw new Error('finder search failed');
+            const data = await response.json();
+            renderProducts(data.results || []);
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            loading.style.display = 'none';
+            noResult.textContent = '검색 중 오류가 발생했습니다.';
+            noResult.style.display = '';
+        }
+    }
+
+    function scheduleSearch(delay) {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(runSearch, delay == null ? 220 : delay);
+    }
+
+    function openDrawer(button) {
+        sourceId = button.dataset.sourceId;
+        sourceCategoryId = button.dataset.categoryId || '';
+        sourceRootCategoryId = button.dataset.rootCategoryId || '';
+        targetName.textContent = button.dataset.sourceName || '미매핑 상품';
+        targetId.textContent = 'ProductSource #' + sourceId;
+
+        const categoryName = button.dataset.categoryName || '';
+        const rootName = button.dataset.rootCategoryName || '';
+        targetCategory.textContent = categoryName
+            ? '카테고리 · ' + (rootName && rootName !== categoryName ? rootName + ' > ' : '') + categoryName
+            : '카테고리 미매핑 · 브랜드 전체에서 검색';
+
+        renderSourceTermFilters(button);
+        search.value = '';
+        exactTab.disabled = !sourceCategoryId;
+        rootTab.disabled = !sourceRootCategoryId;
+        categoryScope = sourceCategoryId ? 'exact' : (sourceRootCategoryId ? 'root' : 'all');
+        categoryTabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.scope === categoryScope); });
+
+        document.body.classList.add('pm-drawer-open');
+        drawer.setAttribute('aria-hidden', 'false');
+        scheduleSearch(0);
+        setTimeout(function () { search.focus(); }, 50);
+    }
+
+    document.querySelectorAll('.pm-open-product-finder').forEach(function (button) {
+        button.addEventListener('click', function () { openDrawer(button); });
+    });
+    categoryTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () { if (!tab.disabled) setCategoryScope(tab.dataset.scope); });
+    });
+    search.addEventListener('input', function () { scheduleSearch(220); });
+    closeButton.addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeDrawer();
+            closePromoteModal();
+        }
+    });
+})();
+</script>
+{% endif %}
+
+<script>
+(function () {
+    const STORAGE_KEY = "feedit.productMapping.returnUrl";
+
+    document.querySelectorAll('a.pm-detail-link[href*="/normalization/products/source/"]').forEach(function (link) {
+        link.addEventListener("click", function () {
+            try {
+                sessionStorage.setItem(
+                    STORAGE_KEY,
+                    window.location.pathname + window.location.search + window.location.hash
+                );
+            } catch (error) {
+                // sessionStorage를 사용할 수 없는 환경에서는 기존 링크 동작을 유지합니다.
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}
+
+<style>
+.pm-pagination { display:flex; align-items:center; justify-content:center; gap:16px; margin:24px 0; }
+.pm-pagination a { padding:9px 14px; border:1px solid #d9d9d9; border-radius:8px; text-decoration:none; color:inherit; background:#fff; }
+.pm-pagination-current { font-size:13px; color:#666; }
+</style>
+
+<style>
+.pm-term-filter-chip { cursor:pointer; transition:background .15s ease, color .15s ease, border-color .15s ease; }
+.pm-term-filter-chip.active, .pm-term-filter-chip[aria-pressed="true"] { background:#111; color:#fff; border-color:#111; }
+</style>
